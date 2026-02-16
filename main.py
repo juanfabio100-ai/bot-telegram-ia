@@ -1,26 +1,64 @@
-import telebot
-import openai
 import os
+import telebot
+from groq import Groq
 
-TOKEN = os.getenv("BOT_TOKEN")
-OPENAI_KEY = os.getenv("OPENAI_KEY")
+# =========================
+# CONFIGURAÇÕES
+# =========================
 
-bot = telebot.TeleBot(TOKEN)
-openai.api_key = OPENAI_KEY
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-@bot.message_handler(func=lambda message: True)
-def reply(message):
-    user_text = message.text
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
+client = Groq(api_key=GROQ_API_KEY)
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
+# =========================
+# FUNÇÃO IA (GROQ)
+# =========================
+
+def gerar_resposta(texto_usuario):
+    response = client.chat.completions.create(
+        model="llama3-70b-8192",
         messages=[
-            {"role": "system", "content": "Você é uma IA estratégica, direta e inteligente."},
-            {"role": "user", "content": user_text}
-        ]
+            {
+                "role": "system",
+                "content": "Você é um especialista em vendas, persuasivo, direto e estratégico."
+            },
+            {
+                "role": "user",
+                "content": texto_usuario
+            }
+        ],
+        temperature=0.7,
+        max_tokens=500
     )
 
-    bot.reply_to(message, response.choices[0].message["content"])
+    return response.choices[0].message.content
+
+# =========================
+# COMANDO START
+# =========================
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, "🔥 Bem-vindo! Me diga o que você precisa.")
+
+# =========================
+# RESPONDER MENSAGENS
+# =========================
+
+@bot.message_handler(func=lambda message: True)
+def responder(message):
+    try:
+        resposta = gerar_resposta(message.text)
+        bot.reply_to(message, resposta)
+    except Exception as e:
+        print("Erro:", e)
+        bot.reply_to(message, "⚠️ Erro interno. Tente novamente.")
+
+# =========================
+# INICIAR BOT
+# =========================
 
 print("Bot rodando...")
 bot.infinity_polling()
