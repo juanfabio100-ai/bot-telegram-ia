@@ -1,2 +1,2 @@
 pyTelegramBotAPI
-openai
+openai==0.28
