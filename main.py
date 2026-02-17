@@ -1,111 +1,89 @@
+
 import os
+import requests
+from flask import Flask, request
+import threading
 import time
-import psycopg2
-import telebot
-import traceback
 
-# =========================
-# CONFIGURAÇÕES
-# =========================
-BOT_TOKEN = os.getenv("8364643403:AAHyeBI0rJZGANfXYn6KAJI-NfVgM4f1L38")
-DATABASE_URL = os.getenv("DATABASE_URL")
+app = Flask(__name__)
 
-if not BOT_TOKEN:
-    raise Exception("❌ BOT_TOKEN não encontrado")
+TELEGRAM_TOKEN = os.getenv("8364643403:AAHyeBI0rJZGANfXYn6KAJI-NfVgM4f1L38")
+GROQ_API_KEY = os.getenv("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")
+ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 
-if not DATABASE_URL:
-    raise Exception("❌ DATABASE_URL não encontrado")
+TELEGRAM_URL = f"https://api.telegram.org/bot{8364643403:AAHyeBI0rJZGANfXYn6KAJI-NfVgM4f1L38}/sendMessage"
 
-bot = telebot.TeleBot(BOT_TOKEN)
+# 🔥 Função IA estratégica de vendas
+def perguntar_groq(mensagem_usuario):
+    url = "https://api.groq.com/openai/v1/chat/completions"
 
-# =========================
-# CONEXÃO COM BANCO
-# =========================
-try:
-    print("🔍 Conectando ao banco...")
-    conn = psycopg2.connect(DATABASE_URL)
-    cursor = conn.cursor()
+    headers = {
+        "Authorization": f"Bearer {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}",
+        "Content-Type": "application/json"
+    }
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS mensagens (
-        id SERIAL PRIMARY KEY,
-        chat_id TEXT,
-        username TEXT,
-        mensagem TEXT,
-        data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-    conn.commit()
+    data = {
+        "model": "llama3-8b-8192",
+        "messages": [
+            {
+                "role": "system",
+                "content": """
+Você é uma IA especialista em vendas digitais.
+Seu objetivo é:
+- Criar conexão emocional
+- Gerar curiosidade
+- Identificar dor do cliente
+- Direcionar para compra
+- Usar linguagem persuasiva
+Nunca responda de forma neutra.
+Sempre conduza para conversão.
+"""
+            },
+            {"role": "user", "content": mensagem_usuario}
+        ]
+    }
 
-    print("✅ Banco conectado e tabela pronta")
+    response = requests.post(url, headers=headers, json=data)
 
-except Exception as e:
-    print("❌ ERRO AO CONECTAR NO BANCO")
-    print(e)
-    traceback.print_exc()
-    raise e
+    if response.status_code == 200:
+        resposta = response.json()
+        return resposta["choices"][0]["message"]["content"]
+    else:
+        return "Erro ao conectar com a IA."
 
-# =========================
-# FUNÇÃO PARA SALVAR
-# =========================
-def salvar_mensagem(chat_id, username, texto):
-    try:
-        cursor.execute(
-            "INSERT INTO mensagens (chat_id, username, mensagem) VALUES (%s, %s, %s)",
-            (chat_id, username, texto)
-        )
-        conn.commit()
-        print("💾 Mensagem salva no banco")
-    except Exception as e:
-        print("❌ ERRO AO SALVAR NO BANCO")
-        print(e)
-        traceback.print_exc()
+# 🔥 Mensagem automática de ativação
+def enviar_mensagem_ativacao():
+    time.sleep(5)  # espera o servidor subir
 
-# =========================
-# HANDLERS
-# =========================
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(
-        message.chat.id,
-        "🔥 Bem-vindo! Me diga o que você precisa."
-    )
+    requests.post(TELEGRAM_URL, json={
+        "chat_id": ADMIN_CHAT_ID,
+        "text": "🔥 SUA MÁQUINA DE VENDAS ESTÁ ATIVA E RODANDO 24H 🚀"
+    })
 
-@bot.message_handler(func=lambda m: True)
-def conversa(message):
-    try:
-        chat_id = message.chat.id
-        username = message.from_user.username
-        texto = message.text
+# 🔥 Webhook Telegram
+@app.route(f"/{8364643403:AAHyeBI0rJZGANfXYn6KAJI-NfVgM4f1L38}", methods=["POST"])
+def receber_mensagem():
+    dados = request.get_json()
 
-        print(f"📩 Mensagem recebida: {texto}")
+    if "message" in dados:
+        chat_id = dados["message"]["chat"]["id"]
+        texto_usuario = dados["message"].get("text")
 
-        salvar_mensagem(chat_id, username, texto)
+        if texto_usuario:
+            resposta_ia = perguntar_groq(texto_usuario)
 
-        bot.send_message(
-            chat_id,
-            f"🧠 Recebi sua mensagem:\n\n{texto}"
-        )
+            requests.post(TELEGRAM_URL, json={
+                "chat_id": chat_id,
+                "text": resposta_ia
+            })
 
-    except Exception as e:
-        print("❌ ERRO NO HANDLER")
-        print(e)
-        traceback.print_exc()
+    return "ok"
 
-        bot.send_message(
-            message.chat.id,
-            f"⚠️ Erro real:\n{e}"
-        )
+# 🔥 Rota principal
+@app.route("/")
+def home():
+    return "Máquina de vendas rodando!"
 
-# =========================
-# START DO BOT
-# =========================
-print("🚀 Bot iniciado com sucesso")
-
-while True:
-    try:
-        bot.polling(none_stop=True, interval=3, timeout=20)
-    except Exception as e:
-        print("♻️ Erro no polling, reiniciando...")
-        print(e)
-        time.sleep(5)
+if __name__ == "__main__":
+    threading.Thread(target=enviar_mensagem_ativacao).start()
+    app.run(host="0.0.0.0", port=5000)
