@@ -1,2 +1,35 @@
-pyTelegramBotAPI
-groq
+# Web Framework
+Flask==3.0.0
+flask-cors==4.0.0
+gunicorn==21.2.0
+
+# Telegram
+python-telegram-bot==20.7
+
+# AI/ML
+groq==0.4.2
+openai==1.6.1
+
+# Banco de Dados
+SQLAlchemy==2.0.23
+sqlite3  # built-in
+
+# Utilidades
+python-dotenv==1.0.0
+pydantic==2.5.2
+pydantic-settings==2.1.0
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Segurança
+cryptography==41.0.7
+PyJWT==2.8.0
+
+# Agendamento
+APScheduler==3.10.4
+
+# Data/hora
+pytz==2023.3.post1
+
+# Opcional: Redis (cache)
+redis==5.0.1
