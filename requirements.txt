@@ -1,13 +1,20 @@
-{
-  "$schema": "https://railway.app/railway.schema.json",
-  "build": {
-    "builder": "DOCKERFILE"
-  },
-  "deploy": {
-    "startCommand": "python main.py",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 100,
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
-  }
-}
+# Web
+Flask==2.3.3
+flask-cors==4.0.0
+gunicorn==21.2.0
+
+# Telegram (versão estável)
+python-telegram-bot==13.7
+
+# AI
+groq==0.4.2
+
+# Banco
+SQLAlchemy==2.0.23
+
+# Utilidades
+python-dotenv==1.0.0
+httpx==0.25.2
+
+# Agendamento
+APScheduler==3.10.4
