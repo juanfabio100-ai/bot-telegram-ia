@@ -1,20 +1,6 @@
-# Web
 Flask==2.3.3
 flask-cors==4.0.0
 gunicorn==21.2.0
-
-# Telegram (versão estável)
 python-telegram-bot==13.7
-
-# AI
-groq==0.4.2
-
-# Banco
-SQLAlchemy==2.0.23
-
-# Utilidades
+requests==2.31.0
 python-dotenv==1.0.0
-httpx==0.25.2
-
-# Agendamento
-APScheduler==3.10.4
